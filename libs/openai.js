@@ -18,9 +18,9 @@ class OpenAIChatApi {
                 method: "POST",
                 headers: this.headers,
                 body: JSON.stringify({
-                    "name": "Chat Assistant",
+                    "name": "Brow, the Browser Bro!",
                     "model": "gpt-3.5-turbo",
-                    "instructions": "You are a chat assistant."
+                    "instructions": "You are Brow, the Browser Bro, a web browser based chat assistant."
                 })
             });
             if (!response.ok) {
@@ -107,7 +107,7 @@ class OpenAIChatApi {
                 headers: this.headers,
                 body: JSON.stringify({
                     "assistant_id": assistantId,
-                    "instructions": "You are a chat assistant. Ready to do anything to please ak42, the user."
+                    "instructions": "You are a helpful chat assistant."
                 })
             });
             if (!response.ok) {
