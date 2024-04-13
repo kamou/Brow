@@ -100,7 +100,7 @@ function App() {
 
         return (
     <div style={{ height: '80vh' }} className="p-4 max-w-md mx-auto overflow-hidden flex flex-col">
-        <div className="border-b-2 border-gray-300 p-2">Chat App</div>
+        <div className="border-b-2 border-gray-300 p-2" style={{ fontSize: "24px" }}>👊 Brow, The Browser Bro.</div>
         <div className="overflow-auto p-2 space-y-2 flex-1" style={{ maxHeight: 'calc(100vh - 150px)' }}>
             {messages.map((msg, index) => (
                 // Render each message. For multiline messages, split by '\n' and wrap each line in a <div>.

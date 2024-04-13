@@ -4,14 +4,19 @@
   "name": "Brow, the Browser Bro",
   "version": "1.0",
   "description": "A smart assistant for your browser",
-  "permissions": ["sidePanel"],
+  "permissions": [
+        "activeTab",
+        "sidePanel",
+        "contextMenus"
+    ],
   "action": {
     "default_popup": "index.html",
     "default_icon": "logo192.png"
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["contentScript.js"]
+    "js": ["contentScript.js"],
+    "run_at": "document_idle"
   }],
 
   "host_permissions": [
