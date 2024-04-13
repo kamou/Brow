@@ -29,6 +29,7 @@ function ChatApp() {
     const [waitingForResponse, setWaitingForResponse] = useState(false);
 
     const textareaRef = useRef(null);
+    const [sendOnEnter, setSendOnEnter] = useState(false);
 
     // Initialize Assistant and Thread
     useEffect(() => {
@@ -130,15 +131,33 @@ function ChatApp() {
                 ref={textareaRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { sendMessage(); e.preventDefault(); } }}
+                onKeyDown={e => {
+                    if (sendOnEnter) {
+                        if (e.key === 'Enter' && !e.shiftKey) { sendMessage(); e.preventDefault(); }
+                    } else {
+                        if (e.key === 'Enter' && e.shiftKey) { sendMessage(); e.preventDefault(); }
+                    }
+                }}
                 disabled={waitingForResponse} // Disabled state based on sending status
                 className={`border p-2 w-full resize-none ${waitingForResponse ? 'bg-gray-300' : 'bg-white'}`} // Styling for the text area
                 placeholder="Type a message..."
                 rows="3"
             ></textarea>
-            <button onClick={sendMessage} disabled={waitingForResponse} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Send
-            </button>
+            <div className="flex justify-between items-center px-2 py-2">
+                <button onClick={sendMessage} disabled={waitingForResponse} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Send
+                </button>
+                <div className="flex items-center">
+                    <label className="flex items-center space-x-2">
+                        <span>Press Enter to send message</span>
+                        <input
+                            type="checkbox"
+                            checked={sendOnEnter}
+                            onChange={e => setSendOnEnter(e.target.checked)}
+                        />
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 );
@@ -146,7 +165,9 @@ function ChatApp() {
 
 }
 
-ReactDOM.render(<ChatApp />, document.getElementById('root'));
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container); // Adapt this line
+root.render(<ChatApp />)
 </script>
 </body>
 </html>
