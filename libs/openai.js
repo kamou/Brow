@@ -107,7 +107,6 @@ class OpenAIChatApi {
                 headers: this.headers,
                 body: JSON.stringify({
                     "assistant_id": assistantId,
-                    "instructions": "You are a helpful chat assistant."
                 })
             });
             if (!response.ok) {
