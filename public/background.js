@@ -11,13 +11,24 @@ chrome.runtime.onInstalled.addListener(() => {
         title: "Open Brow",
         contexts: ["all"],
     });
+
+    chrome.contextMenus.create({
+        id: "autoTranslateChat",
+        title: "Auto Translate Chat",
+        contexts: ["all"],
+    });
 });
 
-console.log("register context onclicked listener");
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "sendToChatBot") {
         console.log("Sending message to Brow");
         chrome.tabs.sendMessage(tab.id, { action: "enableHoverEffect" });
+    }
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "autoTranslateChat") {
+        chrome.tabs.sendMessage(tab.id, { action: "autoTranslate" });
     }
 });
 
@@ -27,6 +38,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.sidePanel.open({ windowId: tab.windowId });
   }
 });
+
 
  chrome.runtime.onMessage.addListener(
      function(request, sender, sendResponse) {
@@ -48,5 +60,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
              });
              return true;
          }
+        if (request.message === "clearSelection") {
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {action: "clearSelection"});
+            });
+        }
      }
  );

@@ -3,23 +3,83 @@ console.log('contentScript.js loaded');
 
 let hoverEffectEnabled = false;
 let hoveredElement = null;
+let selectedElements = [];
 
-function handleMouseOver(event) {
+
+document.body.addEventListener('mouseover', function(event) {
     if (hoverEffectEnabled) {
+
+        if (hoveredElement) {
+            let index = selectedElements.indexOf(hoveredElement);
+            // Only reset the background color if the hovered element isn't in selectedElements
+            if (index === -1) {
+                hoveredElement.style.backgroundColor = '';
+            }
+        }
+
         hoveredElement = event.target;
         hoveredElement.style.backgroundColor = 'rgba(0, 120, 255, 0.2)';
+        event.preventDefault();
+        event.stopPropagation();
     }
-}
+});
 
-function handleMouseOut(event) {
-    if (hoverEffectEnabled && hoveredElement) {
-        hoveredElement.style.backgroundColor = '';
-        hoveredElement = null;
+document.body.addEventListener('mouseout', function(event) {
+    if (hoverEffectEnabled) {
+
+        if (hoveredElement && !selectedElements.includes(hoveredElement)) {
+            hoveredElement.style.backgroundColor = '';
+        }
+        event.preventDefault();
+        event.stopPropagation();
     }
-}
+});
 
-document.addEventListener('mouseover', handleMouseOver, false);
-document.addEventListener('mouseout', handleMouseOut, false);
+document.body.addEventListener('click', function(event) {
+    if (hoverEffectEnabled) {
+        if (hoveredElement && !selectedElements.includes(hoveredElement)) {
+            selectedElements.push(hoveredElement);
+            hoveredElement.style.backgroundColor = 'rgba(0, 120, 255, 0.2)';
+            chrome.runtime.sendMessage({ action: "updatePanel", data: hoveredElement.outerHTML });
+        }
+        event.preventDefault();
+        event.stopPropagation();
+    }
+});
+
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if (request.action === "clearSelection") {
+            for(let i = 0; i < selectedElements.length; i++){
+                selectedElements[i].style.backgroundColor = '';
+            }
+            selectedElements = [];
+            hoveredElement = null;
+            hoverEffectEnabled = false;
+        }
+    });
+
+document.body.addEventListener('keydown', function(event) {
+    // On "Enter" key press, disable hover effect and send selected elements
+    if (hoverEffectEnabled) {
+        if (event.code === 'Enter') {
+
+            hoverEffectEnabled = false;
+
+            for(let i = 0; i < selectedElements.length; i++){
+                selectedElements[i].style.backgroundColor = '';
+            }
+
+            selectedElements = [];
+            hoveredElement.style.backgroundColor = '';
+            hoveredElement = null;
+
+        }
+        event.preventDefault();
+        event.stopPropagation();
+    }
+});
+
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
@@ -57,25 +117,6 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-
-document.addEventListener('click', handleClick, false);
-
-function handleClick(event) {
-    if (hoverEffectEnabled) {
-
-        if (hoveredElement) {
-            console.log("Sending element to sidePanel:", hoveredElement.outerHTML);
-            chrome.tabs.sendMessage({ action: "updatePanel", data: hoveredElement.outerHTML });
-
-            hoveredElement.style.backgroundColor = '';
-            hoveredElement = null;
-        }
-
-        hoverEffectEnabled = false;
-        event.preventDefault();
-    }
-    event.stopPropagation();
-}
 
 document.addEventListener('keydown', function(event) {
     console.log('Keydown event:', event);
