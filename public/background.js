@@ -23,22 +23,30 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'openSidePanel') {
-    // This will open the panel in all the pages on the current window.
     console.log("background open side panel");
-    chrome.tabs.sendMessage(tab.id, { action: "setApiKey" });
     chrome.sidePanel.open({ windowId: tab.windowId });
   }
 });
 
+ chrome.runtime.onMessage.addListener(
+     function(request, sender, sendResponse) {
+         if (request.message === "getKey") {
+             chrome.storage.sync.get("key", function (obj) {
+                 if (!obj.hasOwnProperty("key")) {
+                     chrome.tabs.query({active: true}, function(tabs) {
+                         console.log("tabs:", tabs);
+                         chrome.tabs.sendMessage(tabs[0].id, {action: "setApiKey"}, function(response) {
+                             if (!chrome.runtime.lastError) {
+                                 sendResponse({apiKey: response.key});
+                             }
+                         });
+                     });
+                 } else {
+                     sendResponse({apiKey: obj.key});
+                 }
 
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        if(request.message === "getKey") {
-            console.log("getKey called on background.js side");
-            chrome.storage.sync.get("key", function (obj) {
-                console.log("sending", obj.key);
-                sendResponse({apiKey: obj.key});
-            });
-        }
-        return true;  // Will respond asynchronously.
-    });
+             });
+             return true;
+         }
+     }
+ );

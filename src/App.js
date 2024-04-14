@@ -18,33 +18,29 @@ function App() {
 
     const textareaRef = useRef(null);
     const [sendOnEnter, setSendOnEnter] = useState(false);
-    let userApiKey = null;
-    chrome.runtime.sendMessage({"message": "getKey"}, function(response) {
-        if(response.apiKey) {
-            userApiKey = response.apiKey;
-            console.log("got key from background.js in App.js", userApiKey);
-        }
-    });
 
-    // Initialize Assistant and Thread
     useEffect(() => {
-        console.log(userApiKey);  // api key from the storage
         console.log('Initializing Assistant and Thread...');
         console.log("calling getKey from sidepanel");
-        if(userApiKey) {
-            setApiKey(userApiKey)
-            const api = new OpenAIChatApi(userApiKey);
-            setOpenAIChatApi(api);
+        chrome.runtime.sendMessage({"message": "getKey"}, function(response) {
+            if(response.apiKey) {
+                const userApiKey = response.apiKey;
+                if(userApiKey) {
+                    setApiKey(userApiKey)
+                    const api = new OpenAIChatApi(userApiKey);
+                    setOpenAIChatApi(api);
 
-            api.createAssistant().then(assistant => {
-                setAssistantId(assistant.id);
-                return api.createThread();
-            }).then(thread => {
-                    setThreadId(thread.id);
-                }).catch(console.error);
-        } {
-            console.log("could not get key");
-        }
+                    api.createAssistant().then(assistant => {
+                        setAssistantId(assistant.id);
+                        return api.createThread();
+                    }).then(thread => {
+                            setThreadId(thread.id);
+                        }).catch(console.error);
+                } {
+                    console.log("could not get key");
+                }
+            }
+        });
 
     }, []);
     useEffect(() => {
@@ -69,12 +65,10 @@ function App() {
             }]);
             setInput('');
 
-            // Directly set the last message date in state
             setLastMessageDate(newLastMessageDate);
 
             const runStatus = await openAIChatApi.createRunAndPollStatus(threadId, assistantId);
             if(runStatus.status === "completed") {
-                // Directly pass the new last message date to fetchMessages
                 fetchMessages(threadId, newLastMessageDate);
             }
         } catch (error) {
@@ -137,8 +131,8 @@ function App() {
                         if (e.key === 'Enter' && e.shiftKey) { sendMessage(); e.preventDefault(); }
                     }
                 }}
-                disabled={waitingForResponse} // Disabled state based on sending status
-                className={`border p-2 w-full resize-none ${waitingForResponse ? 'bg-gray-300' : 'bg-white'}`} // Styling for the text area
+                disabled={waitingForResponse}
+                className={`border p-2 w-full resize-none ${waitingForResponse ? 'bg-gray-300' : 'bg-white'}`}
                 placeholder="Type a message..."
                 rows="3"
             ></textarea>
