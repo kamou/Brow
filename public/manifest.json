@@ -7,7 +7,9 @@
   "permissions": [
         "activeTab",
         "sidePanel",
-        "contextMenus"
+        "tabs",
+        "contextMenus",
+        "storage"
     ],
   "action": {
     "default_popup": "index.html",

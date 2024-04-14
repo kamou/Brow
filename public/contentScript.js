@@ -4,6 +4,7 @@ console.log('contentScript.js loaded');
 let hoverEffectEnabled = false;
 let hoveredElement = null;
 
+// MutationObserver to observe changes within the page and filter content accordingly
 function handleMouseOver(event) {
     if (hoverEffectEnabled) {
         hoveredElement = event.target;
@@ -22,24 +23,35 @@ document.addEventListener('mouseover', handleMouseOver, false);
 document.addEventListener('mouseout', handleMouseOut, false);
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  console.log('contentScript.js received message:', request);
-  if (request.cmd === 'replaceText') {
-    console.log('Replacing text');
-    let bodyText = document.body.innerHTML;
-    bodyText = bodyText.replace(/pain au chocolat/gi, 'chocolatine');
-    document.body.innerHTML = bodyText;
-  } else if (request.action === "enableHoverEffect") {
-      console.log('contentScript.js enable hover effect:', request);
-      hoverEffectEnabled = true;
-  } else if (request.action === "getClickedElement" && hoveredElement) {
-      const elementInfo = {
-          tagName: hoveredElement.tagName,
-          outerHTML: hoveredElement.outerHTML,
-      };
-      sendResponse(elementInfo);
-      hoveredElement.style.backgroundColor = ''; // Reset background color after sending
-      hoverEffectEnabled = false; // Optionally, reset hover effect
-  }
+    console.log('contentScript.js received message:', request);
+    if (request.action === "enableHoverEffect") {
+        console.log('contentScript.js enable hover effect:', request);
+        hoverEffectEnabled = true;
+    } else if (request.action === "getClickedElement" && hoveredElement) {
+        const elementInfo = {
+            tagName: hoveredElement.tagName,
+            outerHTML: hoveredElement.outerHTML,
+        };
+        sendResponse(elementInfo);
+        hoveredElement.style.backgroundColor = ''; // Reset background color after sending
+        hoverEffectEnabled = false; // Optionally, reset hover effect
+    } else if (request.action === "setApiKey") {
+        console.log("requesting api key");
+        chrome.storage.sync.get(['key'], function(result) {
+            // If the key does not exist, initialize it.
+
+            console.log("i would like to set the key please !");
+            if (!result.key || result.key === null) {
+            // if (Object.keys(result).length === 0 && result.constructor === Object) {
+                apiKey = prompt("Please enter your OpenAI API key:", "");
+                chrome.storage.sync.set({'key': apiKey}, function() {
+                    console.log('Key is set to ' + apiKey);
+                });
+            } else {
+                console.log('Value currently is ' + result.key);
+            }
+        });
+    }
 });
 
 
@@ -47,12 +59,19 @@ document.addEventListener('click', handleClick, false);
 
 function handleClick(event) {
     if (hoverEffectEnabled) {
-        hoverEffectEnabled = false; // Disable hover effect
 
         if (hoveredElement) {
+            console.log("Sending element to sidePanel:", hoveredElement.outerHTML);
+            // chrome.runtime.sendMessage( { action: "updatePanel", data: "New data to display" });
+            chrome.tabs.sendMessage({ action: "updatePanel", data: hoveredElement.outerHTML });
+
+            // let message = { action: "sendToSidePanel", data: hoveredElement.outerHTML };
+            // chrome.runtime.sendMessage(message);
             hoveredElement.style.backgroundColor = ''; // Reset background color
             hoveredElement = null;
         }
+
+        hoverEffectEnabled = false;
         event.preventDefault();
     }
     event.stopPropagation();

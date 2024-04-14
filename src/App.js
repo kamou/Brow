@@ -3,6 +3,8 @@ import React from 'react';
 import {OpenAIChatApi } from './openai.js';
 
 const { useState, useEffect, useRef } = React;
+
+
 function App() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -16,14 +18,21 @@ function App() {
 
     const textareaRef = useRef(null);
     const [sendOnEnter, setSendOnEnter] = useState(false);
+    let userApiKey = null;
+    chrome.runtime.sendMessage({"message": "getKey"}, function(response) {
+        if(response.apiKey) {
+            userApiKey = response.apiKey;
+            console.log("got key from background.js in App.js", userApiKey);
+        }
+    });
 
     // Initialize Assistant and Thread
     useEffect(() => {
-
+        console.log(userApiKey);  // api key from the storage
         console.log('Initializing Assistant and Thread...');
-        const userApiKey = prompt("Please enter your OpenAI API key:", "");
+        console.log("calling getKey from sidepanel");
         if(userApiKey) {
-            setApiKey(userApiKey);
+            setApiKey(userApiKey)
             const api = new OpenAIChatApi(userApiKey);
             setOpenAIChatApi(api);
 
@@ -31,9 +40,12 @@ function App() {
                 setAssistantId(assistant.id);
                 return api.createThread();
             }).then(thread => {
-                setThreadId(thread.id);
-            }).catch(console.error);
+                    setThreadId(thread.id);
+                }).catch(console.error);
+        } {
+            console.log("could not get key");
         }
+
     }, []);
     useEffect(() => {
         if (!waitingForResponse) {
